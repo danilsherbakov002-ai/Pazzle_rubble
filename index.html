@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#12131C">
-<title>Puzzle Master — Dual Mode</title>
+<title>Puzzle Master 6.0</title>
 <link rel="manifest" href="manifest.json">
 <style>.screen{display:none !important}.screen.active{display:flex !important}</style>
 <script>
@@ -129,10 +129,11 @@ document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='
         <input type="range" id="px-slider" min="32" max="200" step="4" value="64">
         <span class="slider-val" id="px-slider-val">64×64</span>
       </div>
-      <button class="btn btn-secondary" data-action="pxphoto"><svg class="ic" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Загрузить своё фото (пин)</span></button>
+      <button class="btn btn-primary" data-action="pxphoto"><svg class="ic" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Загрузить пин (фото)</span></button>
+      <p class="hint-text">Пины сохраняются в «Мои Пины» вместе с прогрессом раскрашивания.</p>
     </div>
-    <div class="category-tabs" id="px-cat-tabs"></div>
-    <div class="levels-grid" id="px-grid"></div>
+    <p class="px-section">Мои Пины</p>
+    <div class="levels-grid" id="px-pins"></div>
   </div>
 </section>
 
@@ -182,7 +183,7 @@ document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='
       <div class="setting-item"><span class="setting-label">Метка цели в пазлах</span><label class="toggle-switch"><input type="checkbox" id="setting-targetglow" checked onchange="updateSetting('targetglow',this.checked)"><span class="toggle-slider"></span></label></div>
     </div>
     <div class="settings-group"><button class="btn btn-danger btn-full" data-action="reset"><span>Сбросить прогресс</span></button></div>
-    <div class="settings-info"><p>Puzzle Master 5.0</p></div>
+    <div class="settings-info"><p>Puzzle Master 6.0</p></div>
   </div>
 </section>
 
