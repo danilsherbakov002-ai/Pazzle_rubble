@@ -9,256 +9,265 @@
     <meta name="theme-color" content="#0a0a1a">
     <meta name="screen-orientation" content="portrait">
     <meta name="full-screen" content="yes">
+    <meta name="description" content="Puzzle Master — сочная премиальная игра-пазл">
     <title>Puzzle Master — Premium Jigsaw</title>
+
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
+
+    <!-- ⚡ FAILSAFE: даже если style.css не загрузится — экраны не наслаиваются -->
+    <style>
+        .screen{display:none !important}
+        .screen.active{display:flex !important}
+    </style>
+
+    <!-- 🖼 Глобальный fallback для битых изображений (работает и для динамических <img>) -->
+    <script>
+        (function () {
+            var svg =
+                '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">' +
+                '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
+                '<stop offset="0" stop-color="#6c5ce7"/><stop offset=".5" stop-color="#fd79a8"/>' +
+                '<stop offset="1" stop-color="#00b894"/></linearGradient></defs>' +
+                '<rect width="600" height="600" fill="url(#g)"/>' +
+                '<circle cx="120" cy="140" r="70" fill="rgba(255,255,255,.15)"/>' +
+                '<circle cx="480" cy="440" r="110" fill="rgba(255,255,255,.12)"/>' +
+                '<text x="300" y="330" font-size="170" text-anchor="middle">🧩</text>' +
+                '<text x="300" y="430" font-size="34" text-anchor="middle" fill="rgba(255,255,255,.9)" font-family="sans-serif" font-weight="bold">PUZZLE MASTER</text>' +
+                '</svg>';
+            window.IMG_FALLBACK = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+
+            // Перехватываем ошибку ЛЮБОЙ картинки (capture) и подставляем заглушку
+            document.addEventListener('error', function (e) {
+                var t = e.target;
+                if (t && t.tagName === 'IMG' && t.src !== window.IMG_FALLBACK) {
+                    t.src = window.IMG_FALLBACK;
+                }
+            }, true);
+        })();
+    </script>
+
+    <!-- Основной стиль -->
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- App Container -->
-    <div id="app">
-        <!-- Main Menu Screen -->
-        <div id="screen-menu" class="screen active">
-            <div class="menu-bg-particles" id="particles"></div>
-            <div class="menu-content">
-                <div class="logo-container">
-                    <div class="logo-icon">🧩</div>
-                    <h1 class="logo-title">PUZZLE<br><span class="logo-accent">MASTER</span></h1>
-                    <p class="logo-subtitle">Premium Jigsaw Experience</p>
+<div id="app">
+
+    <!-- ========== ГЛАВНОЕ МЕНЮ ========== -->
+    <section id="screen-menu" class="screen active">
+        <div class="menu-bg-particles" id="particles"></div>
+        <div class="menu-content">
+            <div class="logo-container">
+                <div class="logo-icon">🧩</div>
+                <h1 class="logo-title">PUZZLE<br><span class="logo-accent">MASTER</span></h1>
+                <p class="logo-subtitle">Premium Jigsaw Experience</p>
+            </div>
+
+            <div class="menu-stats glass-card">
+                <div class="stat-item">
+                    <span class="stat-icon">⭐</span>
+                    <span class="stat-value" id="total-stars">0</span>
+                    <span class="stat-label">Звёзд</span>
                 </div>
-                <div class="menu-stats">
-                    <div class="stat-item">
-                        <span class="stat-icon">⭐</span>
-                        <span class="stat-value" id="total-stars">0</span>
-                        <span class="stat-label">Звёзд</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-icon">🏆</span>
-                        <span class="stat-value" id="total-completed">0</span>
-                        <span class="stat-label">Пройдено</span>
-                    </div>
-                </div>
-                <div class="menu-buttons">
-                    <button class="btn btn-primary btn-lg" onclick="showScreen('screen-gallery')">
-                        <span class="btn-icon">🎮</span>
-                        <span class="btn-text">Играть</span>
-                    </button>
-                    <button class="btn btn-secondary" onclick="showScreen('screen-settings')">
-                        <span class="btn-icon">⚙️</span>
-                        <span class="btn-text">Настройки</span>
-                    </button>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-icon">🏆</span>
+                    <span class="stat-value" id="total-completed">0</span>
+                    <span class="stat-label">Пройдено</span>
                 </div>
             </div>
-        </div>
 
-        <!-- Gallery / Level Select Screen -->
-        <div id="screen-gallery" class="screen">
-            <div class="screen-header">
-                <button class="btn-back" onclick="showScreen('screen-menu')">
-                    <span>←</span>
+            <div class="menu-buttons">
+                <button class="btn btn-primary btn-lg" onclick="showScreen('screen-gallery')">
+                    <span class="btn-icon">🎮</span><span class="btn-text">Играть</span>
                 </button>
-                <h2 class="screen-title">Галерея</h2>
-                <button class="btn-add-photo" onclick="addCustomPhoto()">
-                    <span>+</span>
+                <button class="btn btn-secondary" onclick="showScreen('screen-settings')">
+                    <span class="btn-icon">⚙️</span><span class="btn-text">Настройки</span>
                 </button>
             </div>
-            <div class="gallery-content">
-                <div class="category-tabs" id="category-tabs"></div>
-                <div class="levels-grid" id="levels-grid"></div>
-            </div>
         </div>
+    </section>
 
-        <!-- Difficulty Select Screen -->
-        <div id="screen-difficulty" class="screen">
-            <div class="screen-header">
-                <button class="btn-back" onclick="showScreen('screen-gallery')">
-                    <span>←</span>
-                </button>
-                <h2 class="screen-title">Сложность</h2>
-                <div></div>
-            </div>
-            <div class="difficulty-content">
-                <div class="level-preview">
-                    <img id="difficulty-preview-img" src="" alt="Preview">
-                    <h3 id="difficulty-level-name"></h3>
-                </div>
-                <div class="difficulty-options">
-                    <button class="btn btn-difficulty" onclick="startGame(3)">
-                        <span class="diff-grid diff-3x3"></span>
-                        <span class="diff-label">Легко</span>
-                        <span class="diff-size">3×3</span>
-                    </button>
-                    <button class="btn btn-difficulty" onclick="startGame(4)">
-                        <span class="diff-grid diff-4x4"></span>
-                        <span class="diff-label">Средне</span>
-                        <span class="diff-size">4×4</span>
-                    </button>
-                    <button class="btn btn-difficulty" onclick="startGame(5)">
-                        <span class="diff-grid diff-5x5"></span>
-                        <span class="diff-label">Сложно</span>
-                        <span class="diff-size">5×5</span>
-                    </button>
-                    <button class="btn btn-difficulty" onclick="startGame(6)">
-                        <span class="diff-grid diff-6x6"></span>
-                        <span class="diff-label">Эксперт</span>
-                        <span class="diff-size">6×6</span>
-                    </button>
-                </div>
-            </div>
+    <!-- ========== ГАЛЕРЕЯ ========== -->
+    <section id="screen-gallery" class="screen">
+        <header class="screen-header">
+            <button class="btn-back" onclick="showScreen('screen-menu')" aria-label="Назад">←</button>
+            <h2 class="screen-title">Галерея</h2>
+            <button class="btn-add-photo" onclick="addCustomPhoto()" aria-label="Добавить фото">+</button>
+        </header>
+        <div class="gallery-content">
+            <div class="category-tabs" id="category-tabs"></div>
+            <div class="levels-grid" id="levels-grid"></div>
         </div>
+    </section>
 
-        <!-- Game Screen -->
-        <div id="screen-game" class="screen">
-            <div class="game-header">
-                <button class="btn-icon-circle" onclick="pauseGame()">
-                    <span>⏸</span>
+    <!-- ========== ВЫБОР СЛОЖНОСТИ ========== -->
+    <section id="screen-difficulty" class="screen">
+        <header class="screen-header">
+            <button class="btn-back" onclick="showScreen('screen-gallery')" aria-label="Назад">←</button>
+            <h2 class="screen-title">Сложность</h2>
+            <span class="header-spacer"></span>
+        </header>
+        <div class="difficulty-content">
+            <div class="level-preview glass-card">
+                <img id="difficulty-preview-img" src="" alt="Preview"
+                     onerror="this.onerror=null;this.src=IMG_FALLBACK;">
+                <h3 id="difficulty-level-name"></h3>
+            </div>
+            <div class="difficulty-options">
+                <button class="btn btn-difficulty" onclick="startGame(3)">
+                    <span class="diff-grid diff-3x3"></span>
+                    <span class="diff-label">Легко</span>
+                    <span class="diff-size">3×3</span>
                 </button>
-                <div class="game-info">
-                    <div class="game-timer" id="game-timer">00:00</div>
-                    <div class="game-moves">Ходы: <span id="game-moves">0</span></div>
-                </div>
-                <button class="btn-icon-circle" onclick="toggleHint()">
-                    <span>👁</span>
+                <button class="btn btn-difficulty" onclick="startGame(4)">
+                    <span class="diff-grid diff-4x4"></span>
+                    <span class="diff-label">Средне</span>
+                    <span class="diff-size">4×4</span>
+                </button>
+                <button class="btn btn-difficulty" onclick="startGame(5)">
+                    <span class="diff-grid diff-5x5"></span>
+                    <span class="diff-label">Сложно</span>
+                    <span class="diff-size">5×5</span>
+                </button>
+                <button class="btn btn-difficulty" onclick="startGame(6)">
+                    <span class="diff-grid diff-6x6"></span>
+                    <span class="diff-label">Эксперт</span>
+                    <span class="diff-size">6×6</span>
                 </button>
             </div>
-            <div class="game-area" id="game-area">
-                <canvas id="game-canvas"></canvas>
-                <div id="hint-overlay" class="hint-overlay hidden"></div>
-            </div>
         </div>
+    </section>
 
-        <!-- Pause Screen -->
-        <div id="screen-pause" class="screen overlay-screen">
-            <div class="pause-overlay"></div>
-            <div class="pause-content glass-card">
-                <h2>⏸ Пауза</h2>
-                <div class="pause-buttons">
-                    <button class="btn btn-primary" onclick="resumeGame()">
-                        <span class="btn-icon">▶️</span>
-                        <span class="btn-text">Продолжить</span>
-                    </button>
-                    <button class="btn btn-secondary" onclick="restartGame()">
-                        <span class="btn-icon">🔄</span>
-                        <span class="btn-text">Начать заново</span>
-                    </button>
-                    <button class="btn btn-secondary" onclick="quitToMenu()">
-                        <span class="btn-icon">🏠</span>
-                        <span class="btn-text">В меню</span>
-                    </button>
+    <!-- ========== ИГРА ========== -->
+    <section id="screen-game" class="screen">
+        <header class="game-header">
+            <button class="btn-icon-circle" onclick="pauseGame()" aria-label="Пауза">⏸</button>
+            <div class="game-info">
+                <div class="game-timer" id="game-timer">00:00</div>
+                <div class="game-moves">Ходы: <span id="game-moves">0</span></div>
+            </div>
+            <button class="btn-icon-circle" onclick="toggleHint()" aria-label="Подсказка">👁</button>
+        </header>
+        <div class="game-area" id="game-area">
+            <canvas id="game-canvas"></canvas>
+            <img id="hint-overlay" class="hint-overlay hidden" alt=""
+                 onerror="this.onerror=null;this.src=IMG_FALLBACK;">
+        </div>
+    </section>
+
+    <!-- ========== НАСТРОЙКИ ========== -->
+    <section id="screen-settings" class="screen">
+        <header class="screen-header">
+            <button class="btn-back" onclick="showScreen('screen-menu')" aria-label="Назад">←</button>
+            <h2 class="screen-title">Настройки</h2>
+            <span class="header-spacer"></span>
+        </header>
+        <div class="settings-content">
+            <div class="settings-group">
+                <div class="setting-item">
+                    <div class="setting-info"><span class="setting-icon">🔊</span><span class="setting-label">Звуковые эффекты</span></div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-sfx" checked onchange="updateSetting('sfx', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info"><span class="setting-icon">🎵</span><span class="setting-label">Музыка</span></div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-music" checked onchange="updateSetting('music', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info"><span class="setting-icon">📳</span><span class="setting-label">Вибрация</span></div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-vibration" checked onchange="updateSetting('vibration', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info"><span class="setting-icon">💡</span><span class="setting-label">Подсветка мест</span></div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-hints" checked onchange="updateSetting('hints', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
                 </div>
             </div>
-        </div>
-
-        <!-- Victory Screen -->
-        <div id="screen-victory" class="screen overlay-screen">
-            <canvas id="confetti-canvas"></canvas>
-            <div class="victory-overlay"></div>
-            <div class="victory-content glass-card">
-                <h2 class="victory-title">🎉 Победа!</h2>
-                <div class="victory-stars" id="victory-stars"></div>
-                <div class="victory-stats">
-                    <div class="victory-stat">
-                        <span class="victory-stat-label">Время</span>
-                        <span class="victory-stat-value" id="victory-time">00:00</span>
-                    </div>
-                    <div class="victory-stat">
-                        <span class="victory-stat-label">Ходы</span>
-                        <span class="victory-stat-value" id="victory-moves">0</span>
-                    </div>
-                </div>
-                <div class="victory-buttons">
-                    <button class="btn btn-primary btn-lg" onclick="nextLevel()">
-                        <span class="btn-icon">➡️</span>
-                        <span class="btn-text">Следующий</span>
-                    </button>
-                    <button class="btn btn-secondary" onclick="quitToMenu()">
-                        <span class="btn-icon">🏠</span>
-                        <span class="btn-text">В меню</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Settings Screen -->
-        <div id="screen-settings" class="screen">
-            <div class="screen-header">
-                <button class="btn-back" onclick="showScreen('screen-menu')">
-                    <span>←</span>
+            <div class="settings-group">
+                <button class="btn btn-danger btn-full" onclick="resetProgress()">
+                    <span class="btn-icon">🗑️</span><span class="btn-text">Сбросить прогресс</span>
                 </button>
-                <h2 class="screen-title">Настройки</h2>
-                <div></div>
             </div>
-            <div class="settings-content">
-                <div class="settings-group">
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <span class="setting-icon">🔊</span>
-                            <span class="setting-label">Звуковые эффекты</span>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="setting-sfx" checked onchange="updateSetting('sfx', this.checked)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <span class="setting-icon">🎵</span>
-                            <span class="setting-label">Музыка</span>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="setting-music" checked onchange="updateSetting('music', this.checked)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <span class="setting-icon">📳</span>
-                            <span class="setting-label">Вибрация</span>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="setting-vibration" checked onchange="updateSetting('vibration', this.checked)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <span class="setting-icon">💡</span>
-                            <span class="setting-label">Подсветка мест</span>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="setting-hints" checked onchange="updateSetting('hints', this.checked)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-                <div class="settings-group">
-                    <button class="btn btn-danger btn-full" onclick="resetProgress()">
-                        <span class="btn-icon">🗑️</span>
-                        <span class="btn-text">Сбросить прогресс</span>
-                    </button>
-                </div>
-                <div class="settings-info">
-                    <p class="app-version">Puzzle Master v1.0.0</p>
-                    <p class="app-credits">Сделано с ❤️</p>
-                </div>
+            <div class="settings-info">
+                <p class="app-version">Puzzle Master v1.1.0</p>
+                <p class="app-credits">Сделано с ❤️</p>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Hidden file input for custom photos -->
-    <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+    <!-- ========== МОДАЛКА: ПАУЗА ========== -->
+    <section id="screen-pause" class="screen overlay-screen">
+        <div class="modal-card glass-card">
+            <h2 class="modal-title">⏸ Пауза</h2>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="resumeGame()">
+                    <span class="btn-icon">▶️</span><span class="btn-text">Продолжить</span>
+                </button>
+                <button class="btn btn-secondary" onclick="restartGame()">
+                    <span class="btn-icon">🔄</span><span class="btn-text">Начать заново</span>
+                </button>
+                <button class="btn btn-secondary" onclick="quitToMenu()">
+                    <span class="btn-icon">🏠</span><span class="btn-text">В меню</span>
+                </button>
+            </div>
+        </div>
+    </section>
 
-    <!-- Scripts -->
-    <script src="audio.js"></script>
-    <script src="levels.js"></script>
-    <script src="settings.js"></script>
-    <script src="game.js"></script>
-    <script>
-        // Register Service Worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
-        }
-    </script>
+    <!-- ========== МОДАЛКА: ПОБЕДА ========== -->
+    <section id="screen-victory" class="screen overlay-screen">
+        <canvas id="confetti-canvas"></canvas>
+        <div class="modal-card glass-card">
+            <h2 class="victory-title">🎉 Победа!</h2>
+            <div class="victory-stars" id="victory-stars"></div>
+            <div class="victory-stats">
+                <div class="victory-stat">
+                    <span class="victory-stat-label">Время</span>
+                    <span class="victory-stat-value" id="victory-time">00:00</span>
+                </div>
+                <div class="victory-stat">
+                    <span class="victory-stat-label">Ходы</span>
+                    <span class="victory-stat-value" id="victory-moves">0</span>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-primary btn-lg" onclick="nextLevel()">
+                    <span class="btn-icon">➡️</span><span class="btn-text">Следующий</span>
+                </button>
+                <button class="btn btn-secondary" onclick="quitToMenu()">
+                    <span class="btn-icon">🏠</span><span class="btn-text">В меню</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<!-- Скрытый input для загрузки своих фото -->
+<input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+
+<script src="audio.js"></script>
+<script src="levels.js"></script>
+<script src="settings.js"></script>
+<script src="game.js"></script>
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(function (err) {
+            console.log('SW registration failed:', err);
+        });
+    }
+</script>
 </body>
 </html>
