@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#12131C">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Puzzle Master — Dual Mode</title>
 <link rel="manifest" href="manifest.json">
 <style>.screen{display:none !important}.screen.active{display:flex !important}</style>
@@ -88,9 +87,7 @@ document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='
       <div class="room-code" id="multi-code">----</div>
       <canvas id="multi-qr" class="multi-qr"></canvas>
       <p class="hint-text" id="multi-room-status">Ожидание соперника…</p>
-      <div class="chip-row" id="multi-grid-chips">
-        <button class="chip" data-grid="3">3×3</button><button class="chip active" data-grid="4">4×4</button><button class="chip" data-grid="6">6×6</button>
-      </div>
+      <div class="chip-row" id="multi-grid-chips"><button class="chip" data-grid="3">3×3</button><button class="chip active" data-grid="4">4×4</button><button class="chip" data-grid="6">6×6</button></div>
       <button class="btn btn-primary hidden" id="multi-start-btn" data-action="mstart"><span>Начать игру</span></button>
     </div>
   </div>
@@ -122,13 +119,17 @@ document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='
   </header>
   <div class="gallery-content">
     <div class="px-top glass-card">
-      <p class="hint-text">Выбери цвет и закрашивай клетки с его номером (тап или проведение). Два пальца — зум и панорама. За закрас — монеты.</p>
-      <div class="slider-row">
-        <span class="chip-label">Детализация фото</span>
-        <input type="range" id="px-slider" min="200" max="2000" step="100" value="800">
-        <span class="slider-val" id="px-slider-val">≈28×28</span>
+      <div class="px-search-row">
+        <input id="px-search-input" class="search-input" type="text" placeholder="aesthetic, cyberpunk, nature…" autocomplete="off">
+        <button class="btn btn-primary btn-slim" data-action="pxsearch"><svg class="ic" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="M14.5 14.5L20 20"/></svg><span>Найти</span></button>
       </div>
-      <button class="btn btn-primary" data-action="pxphoto"><svg class="ic" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Загрузить своё фото</span></button>
+      <div class="px-results hidden" id="px-results"></div>
+      <div class="slider-row">
+        <span class="chip-label">Детализация</span>
+        <input type="range" id="px-slider" min="32" max="200" step="4" value="64">
+        <span class="slider-val" id="px-slider-val">64×64</span>
+      </div>
+      <button class="btn btn-secondary" data-action="pxphoto"><svg class="ic" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>Загрузить своё фото (пин)</span></button>
     </div>
     <div class="category-tabs" id="px-cat-tabs"></div>
     <div class="levels-grid" id="px-grid"></div>
@@ -146,6 +147,7 @@ document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='
     <button class="tool" id="tool-hand" data-action="tool" data-arg="hand"><svg class="ic" viewBox="0 0 24 24"><path d="M5 9l-3 3 3 3"/><path d="M9 5l3-3 3 3"/><path d="M15 19l-3 3-3-3"/><path d="M19 9l3 3-3 3"/><path d="M2 12h20"/><path d="M12 2v20"/></svg></button>
     <button class="tool" data-action="zout"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
     <button class="tool" data-action="zin"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button>
+    <button class="tool" data-action="pfit"><svg class="ic" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
     <div class="px-progress" id="pxg-progress">0%</div>
   </div>
   <div class="px-area" id="px-area"><canvas id="pxg-canvas"></canvas></div>
@@ -177,10 +179,10 @@ document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='
       <div class="setting-item"><span class="setting-label">Звук</span><label class="toggle-switch"><input type="checkbox" id="setting-sfx" checked onchange="updateSetting('sfx',this.checked)"><span class="toggle-slider"></span></label></div>
       <div class="setting-item"><span class="setting-label">Музыка</span><label class="toggle-switch"><input type="checkbox" id="setting-music" checked onchange="updateSetting('music',this.checked)"><span class="toggle-slider"></span></label></div>
       <div class="setting-item"><span class="setting-label">Вибрация</span><label class="toggle-switch"><input type="checkbox" id="setting-vibration" checked onchange="updateSetting('vibration',this.checked)"><span class="toggle-slider"></span></label></div>
-      <div class="setting-item"><span class="setting-label">Метка цели в пазлах</span><label class="toggle-switch"><input type="checkbox" id="setting-targetglow" checked onchange="updateSetting('targetGlow',this.checked)"><span class="toggle-slider"></span></label></div>
+      <div class="setting-item"><span class="setting-label">Метка цели в пазлах</span><label class="toggle-switch"><input type="checkbox" id="setting-targetglow" checked onchange="updateSetting('targetglow',this.checked)"><span class="toggle-slider"></span></label></div>
     </div>
     <div class="settings-group"><button class="btn btn-danger btn-full" data-action="reset"><span>Сбросить прогресс</span></button></div>
-    <div class="settings-info"><p>Puzzle Master 4.1</p></div>
+    <div class="settings-info"><p>Puzzle Master 5.0</p></div>
   </div>
 </section>
 
@@ -212,7 +214,6 @@ document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='
   </div>
 </section>
 </div>
-
 <input type="file" id="photo-input" accept="image/*" style="display:none">
 <input type="file" id="pixel-photo-input" accept="image/*" style="display:none">
 <script src="game.js"></script>
