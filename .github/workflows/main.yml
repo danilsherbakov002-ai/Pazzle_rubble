@@ -1,1 +1,49 @@
+name: Build Android APK
 
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Install Cordova
+      run: npm install -g cordova
+
+    - name: Create Cordova Project & Copy Files
+      run: |
+        cordova create app com.puzzle.master PuzzleMaster
+        cd app
+        rm -rf www/*
+        cp -r ../* www/ || true
+        rm -rf www/app
+        cordova platform add android
+
+    - name: Build APK
+      run: |
+        cd app
+        cordova build android --verbose
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: PuzzleMaster-APK
+        path: app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+        
