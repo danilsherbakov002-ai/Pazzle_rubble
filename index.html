@@ -76,6 +76,10 @@
                     <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
                     <span>Галерея</span>
                 </button>
+                <button class="btn btn-secondary" onclick="showScreen('screen-pixel')">
+                    <svg class="ic" viewBox="0 0 24 24"><path d="M12 22a10 10 0 1 1 10-10c0 2.2-1.8 3-3 3h-2.5a2.5 2.5 0 0 0-2.5 2.5c0 1.2.8 1.6.8 2.7 0 1-.8 1.8-2.8 1.8z"/><circle cx="7.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="16.5" cy="10.5" r="1" fill="currentColor" stroke="none"/></svg>
+                    <span>Пиксель-арт</span>
+                </button>
                 <button class="btn btn-secondary" onclick="openMulti()">
                     <svg class="ic" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg>
                     <span>По сети</span>
@@ -91,13 +95,9 @@
     <!-- ========== ГАЛЕРЕЯ ========== -->
     <section id="screen-gallery" class="screen">
         <header class="screen-header">
-            <button class="btn-icon" onclick="showScreen('screen-menu')" aria-label="Назад">
-                <svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
+            <button class="btn-icon" onclick="showScreen('screen-menu')" aria-label="Назад"><svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
             <h2 class="screen-title">Галерея</h2>
-            <button class="btn-icon" onclick="addCustomPhoto()" aria-label="Загрузить фото">
-                <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-            </button>
+            <button class="btn-icon" onclick="addCustomPhoto()" aria-label="Загрузить фото"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button>
         </header>
         <div class="gallery-content">
             <div class="category-tabs" id="category-tabs"></div>
@@ -108,9 +108,7 @@
     <!-- ========== СЛОЖНОСТЬ ========== -->
     <section id="screen-difficulty" class="screen">
         <header class="screen-header">
-            <button class="btn-icon" onclick="showScreen('screen-gallery')" aria-label="Назад">
-                <svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
+            <button class="btn-icon" onclick="showScreen('screen-gallery')" aria-label="Назад"><svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
             <h2 class="screen-title">Сложность</h2>
             <span class="header-spacer"></span>
         </header>
@@ -129,12 +127,48 @@
         </div>
     </section>
 
+    <!-- ========== ПИКСЕЛЬ-АРТ ========== -->
+    <section id="screen-pixel" class="screen">
+        <header class="screen-header">
+            <button class="btn-icon" onclick="showScreen('screen-menu')" aria-label="Назад"><svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <h2 class="screen-title">Пиксель-арт</h2>
+            <span class="header-spacer"></span>
+        </header>
+        <div class="gallery-content">
+            <div class="px-top glass-card">
+                <p class="multi-hint">Раскрась по номерам: выбери цвет в палитре и нажимай на клетки с его номером. Можно пикселизировать своё фото.</p>
+                <div class="chip-row" id="px-res-chips">
+                    <button class="chip" data-res="12">12×12</button>
+                    <button class="chip active" data-res="16">16×16</button>
+                    <button class="chip" data-res="20">20×20</button>
+                </div>
+                <button class="btn btn-primary" onclick="pixelPhoto()">
+                    <svg class="ic" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <span>Своё фото</span>
+                </button>
+            </div>
+            <p class="px-section">Пресеты</p>
+            <div class="levels-grid" id="px-presets"></div>
+        </div>
+    </section>
+
+    <!-- ========== ПИКСЕЛЬ-АРТ: ИГРА ========== -->
+    <section id="screen-pixel-game" class="screen">
+        <header class="screen-header">
+            <button class="btn-icon" onclick="pxQuit()" aria-label="Назад"><svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <h2 class="screen-title" id="px-title">Пиксель-арт</h2>
+            <span class="px-pct" id="px-pct">0%</span>
+        </header>
+        <div class="px-area">
+            <canvas id="px-canvas"></canvas>
+        </div>
+        <div class="px-palette" id="px-palette"></div>
+    </section>
+
     <!-- ========== МУЛЬТИПЛЕЕР ========== -->
     <section id="screen-multi" class="screen">
         <header class="screen-header">
-            <button class="btn-icon" onclick="leaveMulti()" aria-label="Назад">
-                <svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
+            <button class="btn-icon" onclick="leaveMulti()" aria-label="Назад"><svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
             <h2 class="screen-title">Игра по сети</h2>
             <span class="header-spacer"></span>
         </header>
@@ -147,13 +181,10 @@
                 </button>
                 <div class="multi-join-row">
                     <input id="multi-code-input" class="text-input" type="text" maxlength="4" placeholder="КОД" autocomplete="off" autocapitalize="characters">
-                    <button class="btn btn-secondary" onclick="mpJoin()">
-                        <span>Войти</span>
-                    </button>
+                    <button class="btn btn-secondary" onclick="mpJoin()"><span>Войти</span></button>
                 </div>
                 <p class="multi-status" id="multi-status"></p>
             </div>
-
             <div id="multi-room" class="multi-room glass-card hidden">
                 <p class="multi-room-label">Код комнаты</p>
                 <div class="multi-code" id="multi-code">----</div>
@@ -206,34 +237,17 @@
     <!-- ========== НАСТРОЙКИ ========== -->
     <section id="screen-settings" class="screen">
         <header class="screen-header">
-            <button class="btn-icon" onclick="showScreen('screen-menu')" aria-label="Назад">
-                <svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
+            <button class="btn-icon" onclick="showScreen('screen-menu')" aria-label="Назад"><svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
             <h2 class="screen-title">Настройки</h2>
             <span class="header-spacer"></span>
         </header>
         <div class="settings-content">
             <div class="settings-group">
-                <div class="setting-item">
-                    <span class="setting-label">Звуковые эффекты</span>
-                    <label class="toggle-switch"><input type="checkbox" id="setting-sfx" checked onchange="updateSetting('sfx', this.checked)"><span class="toggle-slider"></span></label>
-                </div>
-                <div class="setting-item">
-                    <span class="setting-label">Музыка</span>
-                    <label class="toggle-switch"><input type="checkbox" id="setting-music" checked onchange="updateSetting('music', this.checked)"><span class="toggle-slider"></span></label>
-                </div>
-                <div class="setting-item">
-                    <span class="setting-label">Вибрация</span>
-                    <label class="toggle-switch"><input type="checkbox" id="setting-vibration" checked onchange="updateSetting('vibration', this.checked)"><span class="toggle-slider"></span></label>
-                </div>
-                <div class="setting-item">
-                    <span class="setting-label">Зелёная метка цели</span>
-                    <label class="toggle-switch"><input type="checkbox" id="setting-targetglow" checked onchange="updateSetting('targetGlow', this.checked)"><span class="toggle-slider"></span></label>
-                </div>
-                <div class="setting-item">
-                    <span class="setting-label">Номера клеток</span>
-                    <label class="toggle-switch"><input type="checkbox" id="setting-hints" checked onchange="updateSetting('hints', this.checked)"><span class="toggle-slider"></span></label>
-                </div>
+                <div class="setting-item"><span class="setting-label">Звуковые эффекты</span><label class="toggle-switch"><input type="checkbox" id="setting-sfx" checked onchange="updateSetting('sfx', this.checked)"><span class="toggle-slider"></span></label></div>
+                <div class="setting-item"><span class="setting-label">Музыка</span><label class="toggle-switch"><input type="checkbox" id="setting-music" checked onchange="updateSetting('music', this.checked)"><span class="toggle-slider"></span></label></div>
+                <div class="setting-item"><span class="setting-label">Вибрация</span><label class="toggle-switch"><input type="checkbox" id="setting-vibration" checked onchange="updateSetting('vibration', this.checked)"><span class="toggle-slider"></span></label></div>
+                <div class="setting-item"><span class="setting-label">Зелёная метка цели</span><label class="toggle-switch"><input type="checkbox" id="setting-targetglow" checked onchange="updateSetting('targetGlow', this.checked)"><span class="toggle-slider"></span></label></div>
+                <div class="setting-item"><span class="setting-label">Номера клеток</span><label class="toggle-switch"><input type="checkbox" id="setting-hints" checked onchange="updateSetting('hints', this.checked)"><span class="toggle-slider"></span></label></div>
             </div>
             <div class="settings-group">
                 <button class="btn btn-danger btn-full" onclick="resetProgress()">
@@ -242,7 +256,7 @@
                 </button>
             </div>
             <div class="settings-info">
-                <p class="app-version">Puzzle Master 3.0</p>
+                <p class="app-version">Puzzle Master 3.1</p>
                 <p class="app-credits">dark minimalist edition</p>
             </div>
         </div>
@@ -281,6 +295,7 @@
 </div>
 
 <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+<input type="file" id="pixel-photo-input" accept="image/*" style="display:none" onchange="handlePixelPhoto(event)">
 
 <script src="audio.js"></script>
 <script src="levels.js"></script>
