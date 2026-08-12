@@ -6,24 +6,24 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0d0f14">
+    <meta name="theme-color" content="#12131C">
     <meta name="screen-orientation" content="portrait">
-    <title>Puzzle Master — Travel Dark Edition</title>
+    <title>Puzzle Master</title>
 
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23181A26'/><rect x='22' y='22' width='26' height='26' rx='6' fill='%237C8CFF'/><rect x='52' y='22' width='26' height='26' rx='6' fill='%233A3F58'/><rect x='22' y='52' width='26' height='26' rx='6' fill='%233A3F58'/><rect x='52' y='52' width='26' height='26' rx='6' fill='%237C8CFF' transform='rotate(8 65 65)'/></svg>">
 
     <style>.screen{display:none !important}.screen.active{display:flex !important}</style>
 
     <script>
         (function () {
             var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600">' +
-                '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
-                '<stop offset="0" stop-color="#ff9f43"/><stop offset=".55" stop-color="#22303f"/>' +
-                '<stop offset="1" stop-color="#1dd3b0"/></linearGradient></defs>' +
-                '<rect width="600" height="600" fill="url(#g)"/>' +
-                '<text x="300" y="330" font-size="170" text-anchor="middle">🧩</text>' +
-                '<text x="300" y="430" font-size="34" text-anchor="middle" fill="rgba(255,255,255,.9)" font-family="sans-serif" font-weight="bold">PUZZLE MASTER</text></svg>';
+                '<rect width="600" height="600" fill="#181A26"/>' +
+                '<rect x="150" y="150" width="140" height="140" rx="24" fill="#7C8CFF"/>' +
+                '<rect x="310" y="150" width="140" height="140" rx="24" fill="#2A2D3E"/>' +
+                '<rect x="150" y="310" width="140" height="140" rx="24" fill="#2A2D3E"/>' +
+                '<rect x="310" y="310" width="140" height="140" rx="24" fill="#3A3F58"/>' +
+                '<text x="300" y="540" font-size="30" text-anchor="middle" fill="rgba(232,234,242,.6)" font-family="sans-serif" letter-spacing="6">PUZZLE MASTER</text></svg>';
             window.IMG_FALLBACK = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
             document.addEventListener('error', function (e) {
                 var t = e.target;
@@ -32,7 +32,12 @@
         })();
     </script>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -42,19 +47,43 @@
         <div class="menu-bg-particles" id="particles"></div>
         <div class="menu-content">
             <div class="logo-container">
-                <div class="logo-icon">🧩</div>
-                <h1 class="logo-title">PUZZLE<br><span class="logo-accent">MASTER</span></h1>
-                <p class="logo-subtitle">Travel Dark Edition</p>
+                <svg class="logo-mark" viewBox="0 0 100 100" aria-hidden="true">
+                    <rect x="10" y="10" width="38" height="38" rx="9" fill="#7C8CFF"/>
+                    <rect x="52" y="10" width="38" height="38" rx="9" fill="#2A2D3E"/>
+                    <rect x="10" y="52" width="38" height="38" rx="9" fill="#2A2D3E"/>
+                    <rect x="52" y="52" width="38" height="38" rx="9" fill="#3A3F58" transform="rotate(8 71 71)"/>
+                </svg>
+                <h1 class="logo-title">PUZZLE MASTER</h1>
+                <p class="logo-subtitle">dark minimalist edition</p>
             </div>
+
             <div class="menu-stats glass-card">
-                <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-value" id="total-stars">0</span><span class="stat-label">Звёзд</span></div>
+                <div class="stat-item">
+                    <svg class="ic ic-star" viewBox="0 0 24 24"><path d="M12 2l2.9 6.26 6.6.56-5 4.4 1.5 6.5L12 16.9 5.99 19.7l1.5-6.5-5-4.4 6.6-.56z"/></svg>
+                    <span class="stat-value" id="total-stars">0</span>
+                    <span class="stat-label">звёзд</span>
+                </div>
                 <div class="stat-divider"></div>
-                <div class="stat-item"><span class="stat-icon">🏆</span><span class="stat-value" id="total-completed">0</span><span class="stat-label">Пройдено</span></div>
+                <div class="stat-item">
+                    <svg class="ic" viewBox="0 0 24 24"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M17 3H7v4a5 5 0 0 0 10 0z"/><path d="M17 5h3a1 1 0 0 1 1 1c0 2.5-2 4-4 4"/><path d="M7 5H4a1 1 0 0 0-1 1c0 2.5 2 4 4 4"/></svg>
+                    <span class="stat-value" id="total-completed">0</span>
+                    <span class="stat-label">собрано</span>
+                </div>
             </div>
+
             <div class="menu-buttons">
-                <button class="btn btn-primary btn-lg" onclick="showScreen('screen-gallery')"><span class="btn-icon">🎮</span><span class="btn-text">Играть</span></button>
-                <button class="btn btn-teal btn-lg" onclick="addCustomPhoto()"><span class="btn-icon">📸</span><span class="btn-text">Своё фото</span></button>
-                <button class="btn btn-secondary" onclick="showScreen('screen-settings')"><span class="btn-icon">⚙️</span><span class="btn-text">Настройки</span></button>
+                <button class="btn btn-primary" onclick="showScreen('screen-gallery')">
+                    <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                    <span>Галерея</span>
+                </button>
+                <button class="btn btn-secondary" onclick="openMulti()">
+                    <svg class="ic" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg>
+                    <span>По сети</span>
+                </button>
+                <button class="btn btn-secondary" onclick="showScreen('screen-settings')">
+                    <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span>Настройки</span>
+                </button>
             </div>
         </div>
     </section>
@@ -62,9 +91,13 @@
     <!-- ========== ГАЛЕРЕЯ ========== -->
     <section id="screen-gallery" class="screen">
         <header class="screen-header">
-            <button class="btn-back" onclick="showScreen('screen-menu')" aria-label="Назад">←</button>
+            <button class="btn-icon" onclick="showScreen('screen-menu')" aria-label="Назад">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
             <h2 class="screen-title">Галерея</h2>
-            <button class="btn-add-photo" onclick="addCustomPhoto()" aria-label="Своё фото">📸</button>
+            <button class="btn-icon" onclick="addCustomPhoto()" aria-label="Загрузить фото">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+            </button>
         </header>
         <div class="gallery-content">
             <div class="category-tabs" id="category-tabs"></div>
@@ -75,7 +108,9 @@
     <!-- ========== СЛОЖНОСТЬ ========== -->
     <section id="screen-difficulty" class="screen">
         <header class="screen-header">
-            <button class="btn-back" onclick="showScreen('screen-gallery')" aria-label="Назад">←</button>
+            <button class="btn-icon" onclick="showScreen('screen-gallery')" aria-label="Назад">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
             <h2 class="screen-title">Сложность</h2>
             <span class="header-spacer"></span>
         </header>
@@ -89,7 +124,50 @@
                 <button class="btn btn-difficulty" onclick="startGame(4)"><span class="diff-grid diff-4x4"></span><span class="diff-label">Средний</span><span class="diff-size">4×4</span></button>
                 <button class="btn btn-difficulty" onclick="startGame(6)"><span class="diff-grid diff-6x6"></span><span class="diff-label">Сложный</span><span class="diff-size">6×6</span></button>
                 <button class="btn btn-difficulty" onclick="startGame(8)"><span class="diff-grid diff-8x8"></span><span class="diff-label">Эксперт</span><span class="diff-size">8×8</span></button>
-                <button class="btn btn-difficulty btn-hardcore" onclick="startGame(10)"><span class="diff-grid diff-10x10"></span><span class="diff-label">Хардкор</span><span class="diff-size">10×10</span></button>
+                <button class="btn btn-difficulty" onclick="startGame(10)"><span class="diff-grid diff-10x10"></span><span class="diff-label">Хардкор</span><span class="diff-size">10×10</span></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== МУЛЬТИПЛЕЕР ========== -->
+    <section id="screen-multi" class="screen">
+        <header class="screen-header">
+            <button class="btn-icon" onclick="leaveMulti()" aria-label="Назад">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <h2 class="screen-title">Игра по сети</h2>
+            <span class="header-spacer"></span>
+        </header>
+        <div class="multi-content">
+            <div id="multi-lobby" class="multi-lobby glass-card">
+                <p class="multi-hint">Один пазл — два игрока. Кто соберёт быстрее, тот победил. Работает по Wi-Fi и интернету (P2P).</p>
+                <button class="btn btn-primary" onclick="mpCreate()">
+                    <svg class="ic" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg>
+                    <span>Создать комнату</span>
+                </button>
+                <div class="multi-join-row">
+                    <input id="multi-code-input" class="text-input" type="text" maxlength="4" placeholder="КОД" autocomplete="off" autocapitalize="characters">
+                    <button class="btn btn-secondary" onclick="mpJoin()">
+                        <span>Войти</span>
+                    </button>
+                </div>
+                <p class="multi-status" id="multi-status"></p>
+            </div>
+
+            <div id="multi-room" class="multi-room glass-card hidden">
+                <p class="multi-room-label">Код комнаты</p>
+                <div class="multi-code" id="multi-code">----</div>
+                <canvas id="multi-qr" class="multi-qr"></canvas>
+                <p class="multi-status" id="multi-room-status">Ожидание соперника…</p>
+                <div class="chip-row" id="multi-grid-chips">
+                    <button class="chip" data-grid="3">3×3</button>
+                    <button class="chip active" data-grid="4">4×4</button>
+                    <button class="chip" data-grid="6">6×6</button>
+                </div>
+                <button class="btn btn-primary hidden" id="multi-start-btn" onclick="mpStart()">
+                    <svg class="ic" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></svg>
+                    <span>Начать игру</span>
+                </button>
             </div>
         </div>
     </section>
@@ -97,14 +175,25 @@
     <!-- ========== ИГРА ========== -->
     <section id="screen-game" class="screen">
         <header class="game-header">
-            <button class="btn-icon-circle" onclick="pauseGame()" aria-label="Пауза">⏸</button>
+            <button class="btn-icon" onclick="pauseGame()" aria-label="Пауза">
+                <svg class="ic" viewBox="0 0 24 24"><rect x="7" y="5" width="3.5" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="13.5" y="5" width="3.5" height="14" rx="1" fill="currentColor" stroke="none"/></svg>
+            </button>
             <div class="game-info">
                 <div class="game-timer" id="game-timer">00:00</div>
-                <div class="game-moves">Ходы: <span id="game-moves">0</span> · <span id="game-combo" class="game-combo hidden">🔥 x2</span></div>
+                <div class="game-moves">ходы: <span id="game-moves">0</span><span id="game-combo" class="game-combo hidden">· серия ×2</span></div>
             </div>
-            <button class="btn-icon-circle" id="btn-hint" onclick="toggleHint()" aria-label="Подсказка">👁</button>
+            <button class="btn-icon" id="btn-hint" onclick="toggleHint()" aria-label="Подсказка">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
         </header>
+
+        <div class="mp-bars hidden" id="mp-bars">
+            <div class="mp-bar"><span class="mp-name">Вы</span><div class="mp-track"><div class="mp-fill you" id="mp-you"></div></div><span class="mp-pct" id="mp-you-pct">0%</span></div>
+            <div class="mp-bar"><span class="mp-name">Соперник</span><div class="mp-track"><div class="mp-fill opp" id="mp-opp"></div></div><span class="mp-pct" id="mp-opp-pct">0%</span></div>
+        </div>
+
         <div class="game-area" id="game-area">
+            <div class="mp-alert hidden" id="mp-alert"></div>
             <div class="board-wrap" id="board-wrap">
                 <canvas id="board-canvas"></canvas>
                 <img id="hint-overlay" class="hint-overlay hidden" alt="" onerror="this.onerror=null;this.src=IMG_FALLBACK;">
@@ -117,39 +206,44 @@
     <!-- ========== НАСТРОЙКИ ========== -->
     <section id="screen-settings" class="screen">
         <header class="screen-header">
-            <button class="btn-back" onclick="showScreen('screen-menu')" aria-label="Назад">←</button>
+            <button class="btn-icon" onclick="showScreen('screen-menu')" aria-label="Назад">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
             <h2 class="screen-title">Настройки</h2>
             <span class="header-spacer"></span>
         </header>
         <div class="settings-content">
             <div class="settings-group">
                 <div class="setting-item">
-                    <div class="setting-info"><span class="setting-icon">🔊</span><span class="setting-label">Звуковые эффекты</span></div>
+                    <span class="setting-label">Звуковые эффекты</span>
                     <label class="toggle-switch"><input type="checkbox" id="setting-sfx" checked onchange="updateSetting('sfx', this.checked)"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="setting-item">
-                    <div class="setting-info"><span class="setting-icon">🎵</span><span class="setting-label">Музыка</span></div>
+                    <span class="setting-label">Музыка</span>
                     <label class="toggle-switch"><input type="checkbox" id="setting-music" checked onchange="updateSetting('music', this.checked)"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="setting-item">
-                    <div class="setting-info"><span class="setting-icon">📳</span><span class="setting-label">Вибрация</span></div>
+                    <span class="setting-label">Вибрация</span>
                     <label class="toggle-switch"><input type="checkbox" id="setting-vibration" checked onchange="updateSetting('vibration', this.checked)"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="setting-item">
-                    <div class="setting-info"><span class="setting-icon">🎯</span><span class="setting-label">Зелёная метка цели</span></div>
+                    <span class="setting-label">Зелёная метка цели</span>
                     <label class="toggle-switch"><input type="checkbox" id="setting-targetglow" checked onchange="updateSetting('targetGlow', this.checked)"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="setting-item">
-                    <div class="setting-info"><span class="setting-icon">💡</span><span class="setting-label">Номера клеток</span></div>
+                    <span class="setting-label">Номера клеток</span>
                     <label class="toggle-switch"><input type="checkbox" id="setting-hints" checked onchange="updateSetting('hints', this.checked)"><span class="toggle-slider"></span></label>
                 </div>
             </div>
             <div class="settings-group">
-                <button class="btn btn-danger btn-full" onclick="resetProgress()"><span class="btn-icon">🗑️</span><span class="btn-text">Сбросить прогресс</span></button>
+                <button class="btn btn-danger btn-full" onclick="resetProgress()">
+                    <svg class="ic" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    <span>Сбросить прогресс</span>
+                </button>
             </div>
             <div class="settings-info">
-                <p class="app-version">Puzzle Master v2.1 · Juice</p>
-                <p class="app-credits">Сделано с ❤️</p>
+                <p class="app-version">Puzzle Master 3.0</p>
+                <p class="app-credits">dark minimalist edition</p>
             </div>
         </div>
     </section>
@@ -157,28 +251,29 @@
     <!-- ========== ПАУЗА ========== -->
     <section id="screen-pause" class="screen overlay-screen">
         <div class="modal-card glass-card">
-            <h2 class="modal-title">⏸ Пауза</h2>
+            <h2 class="modal-title">Пауза</h2>
             <div class="modal-buttons">
-                <button class="btn btn-primary btn-lg" onclick="resumeGame()"><span class="btn-icon">▶️</span><span class="btn-text">Продолжить</span></button>
-                <button class="btn btn-secondary" onclick="restartGame()"><span class="btn-icon">🔄</span><span class="btn-text">Заново</span></button>
-                <button class="btn btn-secondary" onclick="quitToMenu()"><span class="btn-icon">🏠</span><span class="btn-text">В меню</span></button>
+                <button class="btn btn-primary" onclick="resumeGame()"><svg class="ic" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></svg><span>Продолжить</span></button>
+                <button class="btn btn-secondary" onclick="restartGame()"><svg class="ic" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg><span>Заново</span></button>
+                <button class="btn btn-secondary" onclick="quitToMenu()"><svg class="ic" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>В меню</span></button>
             </div>
         </div>
     </section>
 
-    <!-- ========== ПОБЕДА ========== -->
+    <!-- ========== ФИНАЛ ========== -->
     <section id="screen-victory" class="screen overlay-screen">
         <canvas id="confetti-canvas"></canvas>
         <div class="modal-card glass-card">
-            <h2 class="victory-title">🎉 Победа!</h2>
+            <h2 class="victory-title" id="victory-title">Победа</h2>
+            <p class="victory-sub" id="victory-sub"></p>
             <div class="victory-stars" id="victory-stars"></div>
             <div class="victory-stats">
-                <div class="victory-stat"><span class="victory-stat-label">Время</span><span class="victory-stat-value" id="victory-time">00:00</span></div>
-                <div class="victory-stat"><span class="victory-stat-label">Ходы</span><span class="victory-stat-value" id="victory-moves">0</span></div>
+                <div class="victory-stat"><span class="victory-stat-label">время</span><span class="victory-stat-value" id="victory-time">00:00</span></div>
+                <div class="victory-stat"><span class="victory-stat-label">ходы</span><span class="victory-stat-value" id="victory-moves">0</span></div>
             </div>
             <div class="modal-buttons">
-                <button class="btn btn-primary btn-lg" onclick="nextLevel()"><span class="btn-icon">➡️</span><span class="btn-text">Следующий</span></button>
-                <button class="btn btn-secondary" onclick="quitToMenu()"><span class="btn-icon">🏠</span><span class="btn-text">В меню</span></button>
+                <button class="btn btn-primary" id="victory-next-btn" onclick="nextLevel()"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg><span>Дальше</span></button>
+                <button class="btn btn-secondary" onclick="quitToMenu()"><svg class="ic" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span>В меню</span></button>
             </div>
         </div>
     </section>

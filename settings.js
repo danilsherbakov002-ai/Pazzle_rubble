@@ -1,11 +1,11 @@
-/* ===== НАСТРОЙКИ ===== */
+/* ===== НАСТРОЙКИ v3 ===== */
 
 var DEFAULT_SETTINGS = {
     sfx: true,
     music: true,
     vibration: true,
-    hints: true,        // номера клеток на доске
-    targetGlow: true    // зелёная метка цели при перетаскивании
+    hints: true,
+    targetGlow: true
 };
 
 function getSettings() {
@@ -36,22 +36,20 @@ function loadSettingsUI() {
     document.getElementById('setting-sfx').checked = s.sfx;
     document.getElementById('setting-music').checked = s.music;
     document.getElementById('setting-vibration').checked = s.vibration;
-    document.getElementById('setting-hints').checked = s.hints;
     document.getElementById('setting-targetglow').checked = s.targetGlow;
+    document.getElementById('setting-hints').checked = s.hints;
     applySettings(s);
 }
 
 function resetProgress() {
-    if (confirm('Вы уверены? Весь прогресс будет удалён!')) {
+    if (confirm('Сбросить весь прогресс? Фото из «Мои фото» останутся.')) {
         localStorage.removeItem('puzzleProgress');
-        localStorage.removeItem('customPhotos');
         LEVELS_DATA.forEach(function (lv) {
             lv.stars = 0; lv.completed = false; lv.locked = lv.id > 3;
         });
         audio.playClick();
         showScreen('screen-menu');
         updateMenuStats();
-        alert('Прогресс сброшен!');
     }
 }
 
