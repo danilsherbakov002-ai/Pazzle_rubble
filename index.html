@@ -6,51 +6,35 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0a0a1a">
+    <meta name="theme-color" content="#0d0f14">
     <meta name="screen-orientation" content="portrait">
-    <meta name="full-screen" content="yes">
-    <meta name="description" content="Puzzle Master — сочная премиальная игра-пазл">
-    <title>Puzzle Master — Premium Jigsaw</title>
+    <title>Puzzle Master — Travel Dark Edition</title>
 
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
 
-    <!-- ⚡ FAILSAFE: даже если style.css не загрузится — экраны не наслаиваются -->
-    <style>
-        .screen{display:none !important}
-        .screen.active{display:flex !important}
-    </style>
+    <!-- FAILSAFE: экраны не наслаиваются даже без CSS -->
+    <style>.screen{display:none !important}.screen.active{display:flex !important}</style>
 
-    <!-- 🖼 Глобальный fallback для битых изображений (работает и для динамических <img>) -->
+    <!-- Fallback для битых картинок -->
     <script>
         (function () {
-            var svg =
-                '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">' +
+            var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600">' +
                 '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
-                '<stop offset="0" stop-color="#6c5ce7"/><stop offset=".5" stop-color="#fd79a8"/>' +
-                '<stop offset="1" stop-color="#00b894"/></linearGradient></defs>' +
+                '<stop offset="0" stop-color="#ff9f43"/><stop offset=".55" stop-color="#22303f"/>' +
+                '<stop offset="1" stop-color="#1dd3b0"/></linearGradient></defs>' +
                 '<rect width="600" height="600" fill="url(#g)"/>' +
-                '<circle cx="120" cy="140" r="70" fill="rgba(255,255,255,.15)"/>' +
-                '<circle cx="480" cy="440" r="110" fill="rgba(255,255,255,.12)"/>' +
                 '<text x="300" y="330" font-size="170" text-anchor="middle">🧩</text>' +
-                '<text x="300" y="430" font-size="34" text-anchor="middle" fill="rgba(255,255,255,.9)" font-family="sans-serif" font-weight="bold">PUZZLE MASTER</text>' +
-                '</svg>';
+                '<text x="300" y="430" font-size="34" text-anchor="middle" fill="rgba(255,255,255,.9)" font-family="sans-serif" font-weight="bold">PUZZLE MASTER</text></svg>';
             window.IMG_FALLBACK = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-
-            // Перехватываем ошибку ЛЮБОЙ картинки (capture) и подставляем заглушку
             document.addEventListener('error', function (e) {
                 var t = e.target;
-                if (t && t.tagName === 'IMG' && t.src !== window.IMG_FALLBACK) {
-                    t.src = window.IMG_FALLBACK;
-                }
+                if (t && t.tagName === 'IMG' && t.src !== window.IMG_FALLBACK) t.src = window.IMG_FALLBACK;
             }, true);
         })();
     </script>
 
-    <!-- Основной стиль -->
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
 <div id="app">
@@ -62,7 +46,7 @@
             <div class="logo-container">
                 <div class="logo-icon">🧩</div>
                 <h1 class="logo-title">PUZZLE<br><span class="logo-accent">MASTER</span></h1>
-                <p class="logo-subtitle">Premium Jigsaw Experience</p>
+                <p class="logo-subtitle">Travel Dark Edition</p>
             </div>
 
             <div class="menu-stats glass-card">
@@ -83,6 +67,9 @@
                 <button class="btn btn-primary btn-lg" onclick="showScreen('screen-gallery')">
                     <span class="btn-icon">🎮</span><span class="btn-text">Играть</span>
                 </button>
+                <button class="btn btn-teal btn-lg" onclick="addCustomPhoto()">
+                    <span class="btn-icon">📸</span><span class="btn-text">Своё фото</span>
+                </button>
                 <button class="btn btn-secondary" onclick="showScreen('screen-settings')">
                     <span class="btn-icon">⚙️</span><span class="btn-text">Настройки</span>
                 </button>
@@ -95,7 +82,7 @@
         <header class="screen-header">
             <button class="btn-back" onclick="showScreen('screen-menu')" aria-label="Назад">←</button>
             <h2 class="screen-title">Галерея</h2>
-            <button class="btn-add-photo" onclick="addCustomPhoto()" aria-label="Добавить фото">+</button>
+            <button class="btn-add-photo" onclick="addCustomPhoto()" aria-label="Своё фото">📸</button>
         </header>
         <div class="gallery-content">
             <div class="category-tabs" id="category-tabs"></div>
@@ -103,7 +90,7 @@
         </div>
     </section>
 
-    <!-- ========== ВЫБОР СЛОЖНОСТИ ========== -->
+    <!-- ========== СЛОЖНОСТЬ ========== -->
     <section id="screen-difficulty" class="screen">
         <header class="screen-header">
             <button class="btn-back" onclick="showScreen('screen-gallery')" aria-label="Назад">←</button>
@@ -112,30 +99,24 @@
         </header>
         <div class="difficulty-content">
             <div class="level-preview glass-card">
-                <img id="difficulty-preview-img" src="" alt="Preview"
-                     onerror="this.onerror=null;this.src=IMG_FALLBACK;">
+                <img id="difficulty-preview-img" src="" alt="Preview" onerror="this.onerror=null;this.src=IMG_FALLBACK;">
                 <h3 id="difficulty-level-name"></h3>
             </div>
             <div class="difficulty-options">
                 <button class="btn btn-difficulty" onclick="startGame(3)">
-                    <span class="diff-grid diff-3x3"></span>
-                    <span class="diff-label">Легко</span>
-                    <span class="diff-size">3×3</span>
+                    <span class="diff-grid diff-3x3"></span><span class="diff-label">Лёгкий</span><span class="diff-size">3×3</span>
                 </button>
                 <button class="btn btn-difficulty" onclick="startGame(4)">
-                    <span class="diff-grid diff-4x4"></span>
-                    <span class="diff-label">Средне</span>
-                    <span class="diff-size">4×4</span>
-                </button>
-                <button class="btn btn-difficulty" onclick="startGame(5)">
-                    <span class="diff-grid diff-5x5"></span>
-                    <span class="diff-label">Сложно</span>
-                    <span class="diff-size">5×5</span>
+                    <span class="diff-grid diff-4x4"></span><span class="diff-label">Средний</span><span class="diff-size">4×4</span>
                 </button>
                 <button class="btn btn-difficulty" onclick="startGame(6)">
-                    <span class="diff-grid diff-6x6"></span>
-                    <span class="diff-label">Эксперт</span>
-                    <span class="diff-size">6×6</span>
+                    <span class="diff-grid diff-6x6"></span><span class="diff-label">Сложный</span><span class="diff-size">6×6</span>
+                </button>
+                <button class="btn btn-difficulty" onclick="startGame(8)">
+                    <span class="diff-grid diff-8x8"></span><span class="diff-label">Эксперт</span><span class="diff-size">8×8</span>
+                </button>
+                <button class="btn btn-difficulty btn-hardcore" onclick="startGame(10)">
+                    <span class="diff-grid diff-10x10"></span><span class="diff-label">Хардкор</span><span class="diff-size">10×10</span>
                 </button>
             </div>
         </div>
@@ -149,12 +130,14 @@
                 <div class="game-timer" id="game-timer">00:00</div>
                 <div class="game-moves">Ходы: <span id="game-moves">0</span></div>
             </div>
-            <button class="btn-icon-circle" onclick="toggleHint()" aria-label="Подсказка">👁</button>
+            <button class="btn-icon-circle" id="btn-hint" onclick="toggleHint()" aria-label="Подсказка">👁</button>
         </header>
         <div class="game-area" id="game-area">
-            <canvas id="game-canvas"></canvas>
-            <img id="hint-overlay" class="hint-overlay hidden" alt=""
-                 onerror="this.onerror=null;this.src=IMG_FALLBACK;">
+            <div class="board-wrap" id="board-wrap">
+                <canvas id="board-canvas"></canvas>
+                <img id="hint-overlay" class="hint-overlay hidden" alt="" onerror="this.onerror=null;this.src=IMG_FALLBACK;">
+            </div>
+            <div class="tray" id="tray"></div>
         </div>
     </section>
 
@@ -169,31 +152,19 @@
             <div class="settings-group">
                 <div class="setting-item">
                     <div class="setting-info"><span class="setting-icon">🔊</span><span class="setting-label">Звуковые эффекты</span></div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="setting-sfx" checked onchange="updateSetting('sfx', this.checked)">
-                        <span class="toggle-slider"></span>
-                    </label>
+                    <label class="toggle-switch"><input type="checkbox" id="setting-sfx" checked onchange="updateSetting('sfx', this.checked)"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="setting-item">
                     <div class="setting-info"><span class="setting-icon">🎵</span><span class="setting-label">Музыка</span></div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="setting-music" checked onchange="updateSetting('music', this.checked)">
-                        <span class="toggle-slider"></span>
-                    </label>
+                    <label class="toggle-switch"><input type="checkbox" id="setting-music" checked onchange="updateSetting('music', this.checked)"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="setting-item">
                     <div class="setting-info"><span class="setting-icon">📳</span><span class="setting-label">Вибрация</span></div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="setting-vibration" checked onchange="updateSetting('vibration', this.checked)">
-                        <span class="toggle-slider"></span>
-                    </label>
+                    <label class="toggle-switch"><input type="checkbox" id="setting-vibration" checked onchange="updateSetting('vibration', this.checked)"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="setting-item">
                     <div class="setting-info"><span class="setting-icon">💡</span><span class="setting-label">Подсветка мест</span></div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="setting-hints" checked onchange="updateSetting('hints', this.checked)">
-                        <span class="toggle-slider"></span>
-                    </label>
+                    <label class="toggle-switch"><input type="checkbox" id="setting-hints" checked onchange="updateSetting('hints', this.checked)"><span class="toggle-slider"></span></label>
                 </div>
             </div>
             <div class="settings-group">
@@ -202,7 +173,7 @@
                 </button>
             </div>
             <div class="settings-info">
-                <p class="app-version">Puzzle Master v1.1.0</p>
+                <p class="app-version">Puzzle Master v2.0 · Travel Dark</p>
                 <p class="app-credits">Сделано с ❤️</p>
             </div>
         </div>
@@ -213,15 +184,9 @@
         <div class="modal-card glass-card">
             <h2 class="modal-title">⏸ Пауза</h2>
             <div class="modal-buttons">
-                <button class="btn btn-primary" onclick="resumeGame()">
-                    <span class="btn-icon">▶️</span><span class="btn-text">Продолжить</span>
-                </button>
-                <button class="btn btn-secondary" onclick="restartGame()">
-                    <span class="btn-icon">🔄</span><span class="btn-text">Начать заново</span>
-                </button>
-                <button class="btn btn-secondary" onclick="quitToMenu()">
-                    <span class="btn-icon">🏠</span><span class="btn-text">В меню</span>
-                </button>
+                <button class="btn btn-primary btn-lg" onclick="resumeGame()"><span class="btn-icon">▶️</span><span class="btn-text">Продолжить</span></button>
+                <button class="btn btn-secondary" onclick="restartGame()"><span class="btn-icon">🔄</span><span class="btn-text">Заново</span></button>
+                <button class="btn btn-secondary" onclick="quitToMenu()"><span class="btn-icon">🏠</span><span class="btn-text">В меню</span></button>
             </div>
         </div>
     </section>
@@ -233,29 +198,18 @@
             <h2 class="victory-title">🎉 Победа!</h2>
             <div class="victory-stars" id="victory-stars"></div>
             <div class="victory-stats">
-                <div class="victory-stat">
-                    <span class="victory-stat-label">Время</span>
-                    <span class="victory-stat-value" id="victory-time">00:00</span>
-                </div>
-                <div class="victory-stat">
-                    <span class="victory-stat-label">Ходы</span>
-                    <span class="victory-stat-value" id="victory-moves">0</span>
-                </div>
+                <div class="victory-stat"><span class="victory-stat-label">Время</span><span class="victory-stat-value" id="victory-time">00:00</span></div>
+                <div class="victory-stat"><span class="victory-stat-label">Ходы</span><span class="victory-stat-value" id="victory-moves">0</span></div>
             </div>
             <div class="modal-buttons">
-                <button class="btn btn-primary btn-lg" onclick="nextLevel()">
-                    <span class="btn-icon">➡️</span><span class="btn-text">Следующий</span>
-                </button>
-                <button class="btn btn-secondary" onclick="quitToMenu()">
-                    <span class="btn-icon">🏠</span><span class="btn-text">В меню</span>
-                </button>
+                <button class="btn btn-primary btn-lg" onclick="nextLevel()"><span class="btn-icon">➡️</span><span class="btn-text">Следующий</span></button>
+                <button class="btn btn-secondary" onclick="quitToMenu()"><span class="btn-icon">🏠</span><span class="btn-text">В меню</span></button>
             </div>
         </div>
     </section>
 
 </div>
 
-<!-- Скрытый input для загрузки своих фото -->
 <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
 
 <script src="audio.js"></script>
@@ -264,9 +218,7 @@
 <script src="game.js"></script>
 <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(function (err) {
-            console.log('SW registration failed:', err);
-        });
+        navigator.serviceWorker.register('sw.js').catch(function (e) { console.log('SW fail', e); });
     }
 </script>
 </body>
