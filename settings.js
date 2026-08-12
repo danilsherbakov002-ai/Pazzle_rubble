@@ -1,75 +1,62 @@
-// ===== SETTINGS MANAGER =====
-const DEFAULT_SETTINGS = {
+/* ===== НАСТРОЙКИ ===== */
+
+var DEFAULT_SETTINGS = {
     sfx: true,
     music: true,
     vibration: true,
-    hints: true
+    hints: true,        // номера клеток на доске
+    targetGlow: true    // зелёная метка цели при перетаскивании
 };
 
 function getSettings() {
-    const saved = JSON.parse(localStorage.getItem('puzzleSettings') || '{}');
-    return { ...DEFAULT_SETTINGS, ...saved };
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem('puzzleSettings') || '{}'); } catch (e) {}
+    return Object.assign({}, DEFAULT_SETTINGS, saved);
 }
 
-function saveSettings(settings) {
-    localStorage.setItem('puzzleSettings', JSON.stringify(settings));
+function saveSettings(s) {
+    localStorage.setItem('puzzleSettings', JSON.stringify(s));
 }
 
 function updateSetting(key, value) {
-    const settings = getSettings();
-    settings[key] = value;
-    saveSettings(settings);
-    applySettings(settings);
+    var s = getSettings();
+    s[key] = value;
+    saveSettings(s);
+    applySettings(s);
 }
 
-function applySettings(settings) {
-    // Apply SFX setting
-    audio.setSFX(settings.sfx);
-    
-    // Apply music setting
-    audio.setMusic(settings.music);
-    
-    // Store vibration and hints for game.js to use
-    window.gameSettings = settings;
+function applySettings(s) {
+    audio.setSFX(s.sfx);
+    audio.setMusic(s.music);
+    window.gameSettings = s;
 }
 
 function loadSettingsUI() {
-    const settings = getSettings();
-    
-    document.getElementById('setting-sfx').checked = settings.sfx;
-    document.getElementById('setting-music').checked = settings.music;
-    document.getElementById('setting-vibration').checked = settings.vibration;
-    document.getElementById('setting-hints').checked = settings.hints;
-    
-    applySettings(settings);
+    var s = getSettings();
+    document.getElementById('setting-sfx').checked = s.sfx;
+    document.getElementById('setting-music').checked = s.music;
+    document.getElementById('setting-vibration').checked = s.vibration;
+    document.getElementById('setting-hints').checked = s.hints;
+    document.getElementById('setting-targetglow').checked = s.targetGlow;
+    applySettings(s);
 }
 
 function resetProgress() {
     if (confirm('Вы уверены? Весь прогресс будет удалён!')) {
         localStorage.removeItem('puzzleProgress');
         localStorage.removeItem('customPhotos');
-        
-        // Reset levels data
-        LEVELS_DATA.forEach(level => {
-            level.stars = 0;
-            level.completed = false;
-            level.locked = level.id > 3; // Keep first 3 unlocked
+        LEVELS_DATA.forEach(function (lv) {
+            lv.stars = 0; lv.completed = false; lv.locked = lv.id > 3;
         });
-        
         audio.playClick();
         showScreen('screen-menu');
         updateMenuStats();
-        
         alert('Прогресс сброшен!');
     }
 }
 
-// Initialize settings on page load
 document.addEventListener('DOMContentLoaded', loadSettingsUI);
 
-// Vibrate helper
 function vibrate(pattern) {
-    if (window.gameSettings && window.gameSettings.vibration && navigator.vibrate) {
-        navigator.vibrate(pattern);
-    }
+    if (window.gameSettings && window.gameSettings.vibration && navigator.vibrate) navigator.vibrate(pattern);
 }

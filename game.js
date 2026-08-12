@@ -1,9 +1,12 @@
 /* ==========================================================
-   PUZZLE MASTER — GAME ENGINE v2.0
-   Точная нарезка, безопасный спавн, магнитный снап 18px
+   PUZZLE MASTER — GAME ENGINE v2.1 «JUICE»
+   Точная нарезка · безопасный спавн · щадящий снап ·
+   деталь парит над пальцем · FX-частицы без лагов · COMBO
    ========================================================== */
 
-var SNAP_PX = 18;
+var DRAG_LIFT = 48;          // деталь парит НАД пальцем
+var COMBO_WINDOW = 6000;     // мс на продолжение комбо
+var FX_MAX = 240;            // лимит частиц (анти-лаг)
 
 var currentLevel = null;
 var gridSize = 4;
@@ -16,21 +19,24 @@ var areaRect = null;
 var boardX = 0, boardY = 0;
 var boardSize = 0, cellSize = 0;
 var sourceCanvas = null;
+var boardCache = null;
 var hintOn = false;
+var combo = 0, lastPlaceTime = 0;
 
-var timerInterval = null;
-var elapsedMs = 0;
-var lastTick = 0;
-var paused = false;
+var timerInterval = null, elapsedMs = 0, lastTick = 0, paused = false;
+
+var fxCanvas = null, fxCtx = null, fxParts = [], fxRaf = null;
 
 function el(id) { return document.getElementById(id); }
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function st() { return window.gameSettings || {}; }
+function snapRadius() { return Math.max(18, Math.min(cellSize * 0.5, 40)); }
 
 /* ---------- НАВИГАЦИЯ ---------- */
 function showScreen(id) {
     audio.playClick();
-    var screens = document.querySelectorAll('.screen');
-    for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
+    var s = document.querySelectorAll('.screen');
+    for (var i = 0; i < s.length; i++) s[i].classList.remove('active');
     el(id).classList.add('active');
     if (id === 'screen-gallery') renderGallery();
     if (id === 'screen-menu') updateMenuStats();
@@ -58,11 +64,9 @@ function renderGallery() {
 
     var grid = el('levels-grid');
     grid.innerHTML = '';
-    var levels = getLevels().filter(function (lv) {
+    getLevels().filter(function (lv) {
         return currentCategory === 'all' || lv.category === currentCategory;
-    });
-
-    levels.forEach(function (lv, i) {
+    }).forEach(function (lv, i) {
         var card = document.createElement('div');
         card.className = 'level-card' + (lv.locked ? ' locked' : '');
         card.style.animationDelay = (i * 0.04) + 's';
@@ -94,7 +98,7 @@ function selectLevel(lv) {
     showScreen('screen-difficulty');
 }
 
-/* ---------- ЗАГРУЗКА ИСТОЧНИКА ---------- */
+/* ---------- ИСТОЧНИК ---------- */
 function loadSourceImage(url, onReady) {
     var img = new Image();
     img.crossOrigin = 'anonymous';
@@ -104,11 +108,8 @@ function loadSourceImage(url, onReady) {
 }
 
 function buildSource(img) {
-    var nw = img.naturalWidth || img.width;
-    var nh = img.naturalHeight || img.height;
-    var side = Math.min(nw, nh);
-    var sx = (nw - side) / 2, sy = (nh - side) / 2;
-    var S = 720;
+    var nw = img.naturalWidth || img.width, nh = img.naturalHeight || img.height;
+    var side = Math.min(nw, nh), sx = (nw - side) / 2, sy = (nh - side) / 2, S = 720;
     var c = document.createElement('canvas');
     c.width = S; c.height = S;
     c.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, S, S);
@@ -116,12 +117,11 @@ function buildSource(img) {
 }
 
 function buildProceduralSource() {
-    var S = 720;
-    var c = document.createElement('canvas');
+    var S = 720, c = document.createElement('canvas');
     c.width = S; c.height = S;
     var ctx = c.getContext('2d');
     var g = ctx.createLinearGradient(0, 0, S, S);
-    g.addColorStop(0, '#ff9f43'); g.addColorStop(0.5, '#22303f'); g.addColorStop(1, '#1dd3b0');
+    g.addColorStop(0, '#ff9f43'); g.addColorStop(.5, '#22303f'); g.addColorStop(1, '#1dd3b0');
     ctx.fillStyle = g; ctx.fillRect(0, 0, S, S);
     for (var i = 0; i < 26; i++) {
         ctx.beginPath();
@@ -132,22 +132,25 @@ function buildProceduralSource() {
     return c;
 }
 
-/* ---------- СТАРТ ИГРЫ ---------- */
+/* ---------- СТАРТ ---------- */
 function startGame(grid) {
     audio.playClick();
     gridSize = grid;
     try { localStorage.setItem('lastGrid', String(grid)); } catch (e) {}
 
-    moves = 0; placedCount = 0; hintOn = true; toggleHint(true);
+    moves = 0; placedCount = 0; combo = 0; lastPlaceTime = 0;
     el('game-moves').textContent = '0';
     el('game-timer').textContent = '00:00';
+    el('game-combo').classList.add('hidden');
+    hintOn = true; toggleHint(true);
 
     showScreen('screen-game');
     var area = el('game-area');
     area.classList.remove('done');
-    var old = area.querySelectorAll('.piece');
+    var old = area.querySelectorAll('.piece, .float-text');
     for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
     pieces = [];
+    fxParts = [];
 
     loadSourceImage(currentLevel.image, function (src) {
         sourceCanvas = src;
@@ -158,14 +161,11 @@ function startGame(grid) {
     });
 }
 
-/* ---------- РАСКЛАДКА (bounds-safe) ---------- */
+/* ---------- РАСКЛАДКА + КЭШ ДОСКИ ---------- */
 function layoutGame() {
-    var area = el('game-area');
-    var tray = el('tray');
-    var wrap = el('board-wrap');
-    var canvas = el('board-canvas');
-
+    var area = el('game-area'), tray = el('tray'), wrap = el('board-wrap'), canvas = el('board-canvas');
     var aW = area.clientWidth, aH = area.clientHeight;
+
     var trayH = clamp(Math.round(aH * 0.32), 140, 240);
     tray.style.height = trayH + 'px';
 
@@ -181,9 +181,15 @@ function layoutGame() {
 
     wrap.style.width = boardSize + 'px';
     wrap.style.height = boardSize + 'px';
-
     boardX = wrap.offsetLeft;
     boardY = wrap.offsetTop;
+
+    fxCanvas = el('fx-canvas');
+    fxCtx = fxCanvas.getContext('2d');
+    fxCanvas.width = aW;
+    fxCanvas.height = aH;
+
+    buildBoardCache(dpr);
 
     for (var i = 0; i < pieces.length; i++) {
         var p = pieces[i];
@@ -199,12 +205,16 @@ function layoutGame() {
         }
         setPieceTransform(p, false);
     }
-    drawBoard(null);
+    drawBoard(null, 0);
 }
 
-function drawBoard(highlight) {
-    var ctx = el('board-canvas').getContext('2d');
-    ctx.clearRect(0, 0, boardSize, boardSize);
+function buildBoardCache(dpr) {
+    boardCache = document.createElement('canvas');
+    boardCache.width = Math.round(boardSize * dpr);
+    boardCache.height = Math.round(boardSize * dpr);
+    var ctx = boardCache.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
     ctx.fillStyle = 'rgba(255,255,255,0.035)';
     ctx.fillRect(0, 0, boardSize, boardSize);
 
@@ -216,24 +226,42 @@ function drawBoard(highlight) {
         ctx.beginPath(); ctx.moveTo(0, pos); ctx.lineTo(boardSize, pos); ctx.stroke();
     }
 
-    if (highlight) {
+    if (st().hints) {
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.font = '700 ' + Math.max(9, cellSize * 0.22) + 'px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (var r = 0; r < gridSize; r++)
+            for (var c = 0; c < gridSize; c++)
+                ctx.fillText(String(r * gridSize + c + 1), c * cellSize + cellSize / 2, r * cellSize + cellSize / 2);
+    }
+}
+
+function drawBoard(highlight, intensity) {
+    var ctx = el('board-canvas').getContext('2d');
+    ctx.clearRect(0, 0, boardSize, boardSize);
+    if (boardCache) ctx.drawImage(boardCache, 0, 0, boardSize, boardSize);
+
+    if (highlight && st().targetGlow) {
+        var x = highlight.c * cellSize, y = highlight.r * cellSize;
+        var a = clamp(intensity, 0, 1);
         ctx.save();
-        ctx.strokeStyle = '#1dd3b0';
-        ctx.lineWidth = 3;
+        ctx.fillStyle = 'rgba(29,211,176,' + (0.08 + a * 0.14) + ')';
+        ctx.fillRect(x + 1, y + 1, cellSize - 2, cellSize - 2);
+        ctx.strokeStyle = 'rgba(29,211,176,' + (0.35 + a * 0.65) + ')';
+        ctx.lineWidth = 2 + a * 2;
         ctx.shadowColor = '#1dd3b0';
-        ctx.shadowBlur = 12;
-        ctx.strokeRect(highlight.c * cellSize + 2, highlight.r * cellSize + 2, cellSize - 4, cellSize - 4);
+        ctx.shadowBlur = 6 + a * 14;
+        ctx.strokeRect(x + 2, y + 2, cellSize - 4, cellSize - 4);
         ctx.restore();
     }
 }
 
-/* ---------- СПАВН ДЕТАЛЕЙ (строго в зоне) ---------- */
+/* ---------- СПАВН (строго в зоне) ---------- */
 function spawnPieces() {
-    var area = el('game-area');
-    var tray = el('tray');
+    var area = el('game-area'), tray = el('tray');
     var aW = area.clientWidth, aH = area.clientHeight;
     var trayTop = tray.offsetTop;
-
     var dpr = Math.min(2, window.devicePixelRatio || 1);
     var res = clamp(Math.round(cellSize * dpr), 24, 220);
 
@@ -241,8 +269,7 @@ function spawnPieces() {
         for (var c = 0; c < gridSize; c++) {
             var pc = document.createElement('canvas');
             pc.width = res; pc.height = res;
-            var side = sourceCanvas.width;
-            var sw = side / gridSize;
+            var sw = sourceCanvas.width / gridSize;
             pc.getContext('2d').drawImage(sourceCanvas, c * sw, r * sw, sw, sw, 0, 0, res, res);
 
             var div = document.createElement('div');
@@ -272,11 +299,11 @@ function spawnPieces() {
     }
 }
 
-function setPieceTransform(p, isDragging) {
-    p.el.style.transform = 'translate3d(' + p.x + 'px,' + p.y + 'px,0)' + (isDragging ? ' scale(1.07)' : '');
+function setPieceTransform(p, isDrag) {
+    p.el.style.transform = 'translate3d(' + p.x + 'px,' + p.y + 'px,0)' + (isDrag ? ' scale(1.1)' : '');
 }
 
-/* ---------- TOUCH / DRAG ---------- */
+/* ---------- DRAG + LIFT НАД ПАЛЬЦЕМ ---------- */
 function attachPieceEvents(div, piece) {
     div.addEventListener('touchstart', function (e) {
         if (piece.placed || paused) return;
@@ -284,7 +311,6 @@ function attachPieceEvents(div, piece) {
         var t = e.touches[0];
         beginDrag(piece, t.clientX, t.clientY);
     }, { passive: false });
-
     div.addEventListener('mousedown', function (e) {
         if (piece.placed || paused) return;
         e.preventDefault();
@@ -303,6 +329,7 @@ function beginDrag(piece, cx, cy) {
     piece.el.style.zIndex = String(++zTop);
     audio.playPickup();
     vibrate(10);
+    fxEmitRing(piece.x + piece.w / 2, piece.y + piece.h / 2, 'rgba(29,211,176,0.7)', 3);
 }
 
 function moveDrag(cx, cy) {
@@ -311,16 +338,15 @@ function moveDrag(cx, cy) {
     var aW = el('game-area').clientWidth, aH = el('game-area').clientHeight;
 
     p.x = clamp((cx - areaRect.left) - dragging.offX, 0, aW - p.w);
-    p.y = clamp((cy - areaRect.top) - dragging.offY, 0, aH - p.h);
+    p.y = clamp((cy - areaRect.top) - dragging.offY - DRAG_LIFT, 0, aH - p.h);
     setPieceTransform(p, true);
 
-    var tx = boardX + p.col * cellSize;
-    var ty = boardY + p.row * cellSize;
+    var tx = boardX + p.col * cellSize, ty = boardY + p.row * cellSize;
     var dist = Math.hypot(p.x - tx, p.y - ty);
-    var snap = Math.min(SNAP_PX, cellSize * 0.45);
+    var glowZone = cellSize * 1.4;
 
-    if (dist < snap * 1.6) drawBoard({ r: p.row, c: p.col });
-    else drawBoard(null);
+    if (dist < glowZone) drawBoard({ r: p.row, c: p.col }, 1 - dist / glowZone);
+    else drawBoard(null, 0);
 }
 
 function endDrag() {
@@ -332,12 +358,10 @@ function endDrag() {
     moves++;
     el('game-moves').textContent = moves;
 
-    var tx = boardX + p.col * cellSize;
-    var ty = boardY + p.row * cellSize;
+    var tx = boardX + p.col * cellSize, ty = boardY + p.row * cellSize;
     var dist = Math.hypot(p.x - tx, p.y - ty);
-    var snap = Math.min(SNAP_PX, cellSize * 0.45);
 
-    if (dist <= snap) {
+    if (dist <= snapRadius()) {
         p.placed = true;
         p.x = tx; p.y = ty;
         p.el.classList.add('placed');
@@ -346,15 +370,15 @@ function endDrag() {
         setTimeout(function () { p.el.style.transition = ''; }, 150);
 
         placedCount++;
-        audio.playSnap();
-        vibrate([10, 30, 10]);
-        drawBoard(null);
+        onPlaceFX(p);
 
-        if (placedCount === gridSize * gridSize) setTimeout(winGame, 250);
+        if (placedCount === gridSize * gridSize) setTimeout(winGame, 300);
     } else {
+        combo = 0;
+        el('game-combo').classList.add('hidden');
         setPieceTransform(p, false);
-        drawBoard(null);
     }
+    drawBoard(null, 0);
 }
 
 document.addEventListener('touchmove', function (e) {
@@ -363,11 +387,128 @@ document.addEventListener('touchmove', function (e) {
     var t = e.touches[0];
     moveDrag(t.clientX, t.clientY);
 }, { passive: false });
-
 document.addEventListener('touchend', endDrag);
 document.addEventListener('touchcancel', endDrag);
 document.addEventListener('mousemove', function (e) { if (dragging) moveDrag(e.clientX, e.clientY); });
 document.addEventListener('mouseup', endDrag);
+
+/* ---------- СОЧНЫЕ FX (1 canvas, пул частиц) ---------- */
+function fxEmitRing(x, y, color, power) {
+    if (fxParts.length > FX_MAX) fxParts.splice(0, 10);
+    fxParts.push({ type: 2, x: x, y: y, r: 4, vr: 2.5 + power, life: 0, max: 24, color: color });
+    fxStart();
+}
+
+function fxEmitBurst(x, y, count, power) {
+    var colors = ['#1dd3b0', '#7efff0', '#ff9f43', '#feca57', '#ffffff'];
+    for (var i = 0; i < count; i++) {
+        if (fxParts.length > FX_MAX) fxParts.splice(0, 10);
+        var ang = Math.random() * Math.PI * 2;
+        var sp = (0.5 + Math.random()) * power;
+        fxParts.push({
+            type: Math.random() < 0.35 ? 1 : 0,
+            x: x, y: y,
+            vx: Math.cos(ang) * sp,
+            vy: Math.sin(ang) * sp - 1.6,
+            g: 0.12,
+            life: 0, max: 34 + Math.random() * 22,
+            size: 2 + Math.random() * 3.5,
+            rot: Math.random() * 6.28,
+            vrot: (Math.random() - 0.5) * 0.4,
+            color: colors[Math.floor(Math.random() * colors.length)]
+        });
+    }
+    fxStart();
+}
+
+function fxStart() { if (!fxRaf) fxRaf = requestAnimationFrame(fxStep); }
+
+function fxStep() {
+    fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+    var alive = [];
+    for (var i = 0; i < fxParts.length; i++) {
+        var p = fxParts[i];
+        p.life++;
+        if (p.life >= p.max) continue;
+        var t = 1 - p.life / p.max;
+
+        if (p.type === 2) {
+            p.r += p.vr;
+            fxCtx.save();
+            fxCtx.globalAlpha = t * 0.9;
+            fxCtx.strokeStyle = p.color;
+            fxCtx.lineWidth = 2.5 * t + 0.5;
+            fxCtx.beginPath();
+            fxCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            fxCtx.stroke();
+            fxCtx.restore();
+        } else {
+            p.x += p.vx; p.y += p.vy; p.vy += p.g; p.vx *= 0.985; p.rot += p.vrot;
+            fxCtx.save();
+            fxCtx.globalAlpha = t;
+            fxCtx.fillStyle = p.color;
+            fxCtx.translate(p.x, p.y);
+            if (p.type === 1) {
+                fxCtx.rotate(p.rot);
+                fxCtx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+            } else {
+                fxCtx.beginPath();
+                fxCtx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                fxCtx.fill();
+            }
+            fxCtx.restore();
+        }
+        alive.push(p);
+    }
+    fxParts = alive;
+    if (fxParts.length > 0) fxRaf = requestAnimationFrame(fxStep);
+    else { fxRaf = null; fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); }
+}
+
+function floatText(x, y, text, cls) {
+    var d = document.createElement('div');
+    d.className = 'float-text' + (cls ? ' ' + cls : '');
+    d.textContent = text;
+    d.style.left = x + 'px';
+    d.style.top = y + 'px';
+    el('game-area').appendChild(d);
+    d.addEventListener('animationend', function () { if (d.parentNode) d.parentNode.removeChild(d); });
+}
+
+function shakeBoard() {
+    var w = el('board-wrap');
+    w.classList.remove('shake');
+    void w.offsetWidth;
+    w.classList.add('shake');
+}
+
+function onPlaceFX(p) {
+    var cx = p.x + p.w / 2, cy = p.y + p.h / 2;
+    var now = performance.now();
+    combo = (now - lastPlaceTime < COMBO_WINDOW) ? combo + 1 : 1;
+    lastPlaceTime = now;
+
+    var mult = Math.min(combo, 5);
+    fxEmitBurst(cx, cy, 10 + mult * 4, 3 + mult * 0.5);
+    fxEmitRing(cx, cy, 'rgba(126,255,240,0.85)', 3 + mult);
+    shakeBoard();
+
+    if (combo >= 2) {
+        floatText(cx, cy - 10, '🔥 COMBO x' + combo, 'combo');
+        var badge = el('game-combo');
+        badge.textContent = '🔥 x' + combo;
+        badge.classList.remove('hidden');
+        badge.style.animation = 'none';
+        void badge.offsetWidth;
+        badge.style.animation = '';
+        vibrate([15, 20, 15]);
+    } else {
+        floatText(cx, cy - 8, '+1', '');
+        vibrate([10, 30, 10]);
+    }
+
+    audio.playSnap();
+}
 
 /* ---------- ТАЙМЕР ---------- */
 function startTimer() {
@@ -379,24 +520,14 @@ function startTimer() {
         if (!paused) elapsedMs += now - lastTick;
         lastTick = now;
         var s = Math.floor(elapsedMs / 1000);
-        var mm = String(Math.floor(s / 60)).padStart(2, '0');
-        var ss = String(s % 60).padStart(2, '0');
-        el('game-timer').textContent = mm + ':' + ss;
+        el('game-timer').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
     }, 250);
 }
 function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
 
 /* ---------- ПАУЗА / ПОДСКАЗКА ---------- */
-function pauseGame() {
-    audio.playClick();
-    paused = true;
-    el('screen-pause').classList.add('active');
-}
-function resumeGame() {
-    audio.playClick();
-    paused = false;
-    el('screen-pause').classList.remove('active');
-}
+function pauseGame() { audio.playClick(); paused = true; el('screen-pause').classList.add('active'); }
+function resumeGame() { audio.playClick(); paused = false; el('screen-pause').classList.remove('active'); }
 function restartGame() {
     audio.playClick();
     el('screen-pause').classList.remove('active');
@@ -429,6 +560,12 @@ function winGame() {
     ctx.drawImage(sourceCanvas, 0, 0, boardSize, boardSize);
     el('game-area').classList.add('done');
 
+    for (var b = 0; b < 3; b++) {
+        setTimeout(function () {
+            fxEmitBurst(boardX + Math.random() * boardSize, boardY + Math.random() * boardSize, 26, 5);
+        }, b * 180);
+    }
+
     var sec = Math.floor(elapsedMs / 1000);
     var total = gridSize * gridSize;
     var stars = 1;
@@ -436,14 +573,11 @@ function winGame() {
     else if (moves <= total * 2.6 && sec <= total * 16) stars = 2;
 
     if (currentLevel && typeof currentLevel.id === 'number') {
-        var best = Math.max(currentLevel.stars || 0, stars);
-        saveLevelProgress(currentLevel.id, { stars: best, completed: true });
+        saveLevelProgress(currentLevel.id, { stars: Math.max(currentLevel.stars || 0, stars), completed: true });
         unlockNextLevels(currentLevel.id);
     }
 
-    var mm = String(Math.floor(sec / 60)).padStart(2, '0');
-    var ss = String(sec % 60).padStart(2, '0');
-    el('victory-time').textContent = mm + ':' + ss;
+    el('victory-time').textContent = String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
     el('victory-moves').textContent = moves;
 
     var box = el('victory-stars');
@@ -462,8 +596,7 @@ function winGame() {
 function nextLevel() {
     audio.playClick();
     el('screen-victory').classList.remove('active');
-    var levels = getLevels();
-    var idx = -1;
+    var levels = getLevels(), idx = -1;
     for (var i = 0; i < levels.length; i++) if (levels[i].id === currentLevel.id) idx = i;
     var next = idx >= 0 ? levels[idx + 1] : null;
     if (next && !next.locked) selectLevel(next);
@@ -472,8 +605,7 @@ function nextLevel() {
 
 /* ---------- КОНФЕТТИ ---------- */
 function startConfetti() {
-    var canvas = el('confetti-canvas');
-    var ctx = canvas.getContext('2d');
+    var canvas = el('confetti-canvas'), ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
@@ -481,12 +613,9 @@ function startConfetti() {
     var parts = [];
     for (var i = 0; i < 140; i++) {
         parts.push({
-            x: Math.random() * canvas.width,
-            y: -Math.random() * canvas.height,
-            vx: (Math.random() - 0.5) * 7,
-            vy: 2 + Math.random() * 4,
-            size: 4 + Math.random() * 8,
-            rot: Math.random() * 360,
+            x: Math.random() * canvas.width, y: -Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 7, vy: 2 + Math.random() * 4,
+            size: 4 + Math.random() * 8, rot: Math.random() * 360,
             vr: (Math.random() - 0.5) * 10,
             color: colors[Math.floor(Math.random() * colors.length)],
             round: Math.random() > 0.5
@@ -516,10 +645,7 @@ function startConfetti() {
 }
 
 /* ---------- СВОЁ ФОТО ---------- */
-function addCustomPhoto() {
-    audio.playClick();
-    el('photo-input').click();
-}
+function addCustomPhoto() { audio.playClick(); el('photo-input').click(); }
 
 function handlePhotoUpload(event) {
     var file = event.target.files[0];
@@ -529,27 +655,20 @@ function handlePhotoUpload(event) {
     var url = URL.createObjectURL(file);
     var img = new Image();
     img.onload = function () {
-        var side = Math.min(img.width, img.height);
-        var S = 720;
+        var side = Math.min(img.width, img.height), S = 720;
         var c = document.createElement('canvas');
         c.width = S; c.height = S;
         c.getContext('2d').drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S);
         URL.revokeObjectURL(url);
 
         var dataURL = c.toDataURL('image/jpeg', 0.85);
-        var lv = {
-            id: 'custom-' + Date.now(),
-            name: 'Моё фото',
-            category: 'custom',
-            image: dataURL,
-            locked: false, stars: 0, completed: false
-        };
+        var lv = { id: 'custom-' + Date.now(), name: 'Моё фото', category: 'custom', image: dataURL, locked: false, stars: 0, completed: false };
 
         try {
             var custom = JSON.parse(localStorage.getItem('customPhotos') || '[]');
             custom.push(lv);
             localStorage.setItem('customPhotos', JSON.stringify(custom));
-        } catch (e) { /* переполнение квоты — играем без сохранения */ }
+        } catch (e) {}
 
         currentLevel = lv;
         audio.playPlace();
@@ -571,7 +690,6 @@ window.addEventListener('orientationchange', function () {
         if (el('screen-game').classList.contains('active') && sourceCanvas) layoutGame();
     }, 250);
 });
-
 document.addEventListener('visibilitychange', function () {
     if (document.hidden && !paused && el('screen-game').classList.contains('active') && timerInterval) pauseGame();
 });
